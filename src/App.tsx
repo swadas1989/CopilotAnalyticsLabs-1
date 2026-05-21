@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { makeStyles, mergeClasses, shorthands } from "@fluentui/react-components";
 import {
+  ArrowDownload16Regular,
   ArrowRight16Regular,
   Beaker24Regular,
   BookOpenGlobe24Regular,
   ChevronDown16Regular,
   Code24Regular,
   DocumentBulletList24Regular,
+  Eye16Regular,
   Mail24Regular,
   Sparkle24Regular,
+  Star16Filled,
 } from "@fluentui/react-icons";
 import { research, resources, templates } from "./data";
 
@@ -77,7 +80,7 @@ const templateMeta: Record<
     stats: [
       { value: "—", label: "Stars" },
       { value: "—", label: "Downloads" },
-      { value: "<10 min", label: "Setup" },
+      { value: "—", label: "Watching" },
     ],
   },
   "m365-copilot-personal": {
@@ -893,14 +896,18 @@ function MicrosoftLogoWordmark() {
 function App() {
   const styles = useStyles();
   const [activeTab, setActiveTab] = useState<(typeof sectionTabs)[number]["id"]>("templates");
-  const [ghStats, setGhStats] = useState<{ stars: string; forks: string }>({ stars: "—", forks: "—" });
+  const [ghStats, setGhStats] = useState<{ stars: string; forks: string; watchers: string }>({ stars: "—", forks: "—", watchers: "—" });
 
   useEffect(() => {
     fetch("https://api.github.com/repos/microsoft/AI-in-One-Dashboard")
       .then((res) => res.json())
       .then((data) => {
         if (data.stargazers_count != null) {
-          setGhStats({ stars: String(data.stargazers_count), forks: String(data.forks_count) });
+          setGhStats({
+            stars: String(data.stargazers_count),
+            forks: String(data.forks_count),
+            watchers: String(data.subscribers_count),
+          });
         }
       })
       .catch(() => {});
@@ -1087,10 +1094,16 @@ function App() {
                               if (item.id === "aio-dashboard") {
                                 if (stat.label === "Stars") value = ghStats.stars;
                                 else if (stat.label === "Downloads") value = ghStats.forks;
+                                else if (stat.label === "Watching") value = ghStats.watchers;
                               }
                               return (
                                 <div key={stat.label} className={styles.statBlock}>
-                                  <span className={styles.statValue}>{value}</span>
+                                  <span className={styles.statValue}>
+                                    {stat.label === "Stars" && <Star16Filled fontSize={14} style={{ color: "#EAA300", marginRight: 4 }} />}
+                                    {stat.label === "Watching" && <Eye16Regular fontSize={14} style={{ marginRight: 4 }} />}
+                                    {stat.label === "Downloads" && <ArrowDownload16Regular fontSize={14} style={{ marginRight: 4 }} />}
+                                    {value}
+                                  </span>
                                   <span className={styles.statLabel}>{stat.label}</span>
                                 </div>
                               );
