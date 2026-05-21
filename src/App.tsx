@@ -1039,9 +1039,6 @@ function App() {
             <p className={styles.eyebrow}>Template library</p>
             <div className={styles.sectionHeadingRow}>
               <h2 className={styles.sectionHeading}>Pick a template, start building</h2>
-              <a className={styles.secondaryButton} href={TEMPLATES_COLLECTION_URL} target="_blank" rel="noreferrer">
-                View all templates
-              </a>
             </div>
             <p className={styles.sectionDescription}>
               Step-by-step templates to build dashboards across adoption, usage, impact, and business value, using data sources beyond Viva.
@@ -1141,9 +1138,6 @@ function App() {
             <p className={styles.eyebrow}>Sample code</p>
             <div className={styles.sectionHeadingRow}>
               <h2 className={styles.sectionHeading}>Grab the code, make it yours</h2>
-              <a className={styles.secondaryButton} href={SAMPLE_CODE_URL} target="_blank" rel="noreferrer">
-                View all codes
-              </a>
             </div>
             <p className={styles.sectionDescription}>
               Runnable scripts, prompt libraries, and analytical methods in Python, R, and Power BI, adapt them to your org's data.
