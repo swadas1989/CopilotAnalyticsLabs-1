@@ -5,7 +5,6 @@ import {
   DocumentBulletList24Regular,
   PersonBoard24Regular,
   AppGeneric24Regular,
-  ClipboardTextLtr24Regular,
   PeopleStar24Regular,
 } from "@fluentui/react-icons";
 
@@ -24,18 +23,29 @@ export interface ResourceItem {
   description: string;
   url: string;
   icon: React.ComponentType;
-  category: "Guidance" | "Code" | "Prompts";
+  category: "Code" | "Prompts";
+  image?: string;
 }
+
+export interface ResearchItem {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  icon: React.ComponentType;
+}
+
+const base = import.meta.env.BASE_URL;
 
 export const templates: TemplateItem[] = [
   {
     id: "aio-dashboard",
     title: "All in One Dashboard",
     description:
-      "Comprehensive Copilot analytics covering adoption, usage, impact, and ROI — all in a single Power BI dashboard.",
+      "Comprehensive Copilot and Agent analytics covering adoption, usage, impact, and ROI — all in a single Power BI dashboard.",
     url: "https://github.com/microsoft/AI-in-One-Dashboard",
     icon: BoardSplit24Regular,
-    image: "/images/aio-dashboard.png",
+    image: `${base}images/card-aio-featured.png`,
   },
   {
     id: "github-copilot-impact-org",
@@ -44,7 +54,7 @@ export const templates: TemplateItem[] = [
       "Org-wide GitHub Copilot usage and productivity impact analysis with seat utilization and code completion metrics.",
     url: "https://github.com/microsoft/GitHubCopilotImpact",
     icon: DataTrending24Regular,
-    image: "/images/github-copilot-impact.png",
+    image: `${base}images/card-github-copilot-org.png`,
   },
   {
     id: "ai-business-value",
@@ -53,7 +63,7 @@ export const templates: TemplateItem[] = [
       "Quantify business value of AI adoption across your organization with executive-ready visualizations.",
     url: "https://github.com/Keithland89/AI-Business-Value-Dashboard",
     icon: Sparkle24Regular,
-    image: "/images/ai-business-value.png",
+    image: `${base}images/card-ai-business-value.png`,
   },
   {
     id: "github-copilot-impact-personal",
@@ -62,33 +72,25 @@ export const templates: TemplateItem[] = [
       "Your personal impact report — what you built, the skills augmented, and the ROI delivered with GitHub Copilot.",
     url: "https://github.com/microsoft/What-I-Did-Copilot",
     icon: PersonBoard24Regular,
-    image: "/images/what-i-did-copilot.png",
+    image: `${base}images/card-github-copilot-personal.png`,
   },
   {
     id: "m365-copilot-personal",
-    title: "M365 Copilot Personal Insights",
+    title: "Microsoft 365 Copilot Personal Insights",
     description:
-      "Personal adoption and engagement dashboard tracking your M365 Copilot usage journey and productivity gains.",
+      "Personal adoption and engagement dashboard tracking your Microsoft 365 Copilot usage journey and productivity gains.",
     url: "https://github.com/sbrandl1005/copilot-personal-dashboard",
     icon: PersonBoard24Regular,
-    image: "/images/copilot-personal-dashboard.png",
+    image: `${base}images/card-m365-copilot-personal.png`,
   },
   {
     id: "m365-app-usage",
-    title: "M365 App Usage Analytics",
+    title: "Microsoft 365 App Usage Analytics",
     description:
-      "Power BI template for M365 app usage analytics and Copilot license recommendations across your tenant.",
+      "Microsoft 365 app usage analytics and Copilot license recommendations across your tenant.",
     url: "https://github.com/microsoft/M365UsageAnalytics",
     icon: AppGeneric24Regular,
-    image: "/images/m365-usage-analytics.png",
-  },
-  {
-    id: "executive-summary",
-    title: "Executive Summary",
-    description:
-      "Prompt-powered executive summary for Viva Insights data — concise narratives from complex workplace analytics.",
-    url: "https://github.com/nickyoung-github/Viva-Insights-Sample-Code-Library",
-    icon: ClipboardTextLtr24Regular,
+    image: `${base}images/card-m365-app-usage.png`,
   },
   {
     id: "superuser-impact",
@@ -97,11 +99,64 @@ export const templates: TemplateItem[] = [
       "Analyze the work and productivity impact of superusers across your organization with detailed pattern analysis.",
     url: "https://github.com/microsoft/superuserimpact",
     icon: PeopleStar24Regular,
-    image: "/images/superuser-impact.png",
+    image: `${base}images/card-superuser-impact.png`,
   },
 ];
 
 export const resources: ResourceItem[] = [
+  {
+    id: "viva-insights-essentials",
+    title: "Viva Insights Analysis - Essentials",
+    description:
+      "Get started with R & Python utility scripts — exploratory data analysis, standard visualisations (bar charts, trend lines, network diagrams), and custom KPI generation from Viva Insights data.",
+    url: "https://microsoft.github.io/viva-insights-sample-code/essentials/",
+    icon: DocumentBulletList24Regular,
+    category: "Code",
+    image: `${base}images/code-essentials.png`,
+  },
+  {
+    id: "advanced-analytics",
+    title: "Advanced Analytics",
+    description:
+      "Machine learning & statistical modelling — Random Forest models for top-performer prediction, Information Value for feature selection, and pairwise chi-square tests for hypothesis testing.",
+    url: "https://microsoft.github.io/viva-insights-sample-code/advanced/",
+    icon: DocumentBulletList24Regular,
+    category: "Code",
+    image: `${base}images/code-advanced-analytics.png`,
+  },
+  {
+    id: "copilot-analytics",
+    title: "Copilot Analytics",
+    description:
+      "Copilot-specific scripts — usage volume & breadth analysis, habituality scoring, Power User vs Habitual User segmentation, and adoption trend tracking across your organisation.",
+    url: "https://microsoft.github.io/viva-insights-sample-code/copilot/",
+    icon: DocumentBulletList24Regular,
+    category: "Code",
+    image: `${base}images/code-copilot-analytics.png`,
+  },
+  {
+    id: "frontier-analytics",
+    title: "Frontier Analytics",
+    description:
+      "AI-assisted, export-first toolkit — ready-to-paste prompts for coding agents, schema docs for person queries & Purview audit logs, and sample specs for ROI estimation dashboards.",
+    url: "https://microsoft.github.io/viva-insights-sample-code/frontier-analytics/",
+    icon: DocumentBulletList24Regular,
+    category: "Code",
+    image: `${base}images/code-frontier-analytics.png`,
+  },
+  {
+    id: "network-analysis",
+    title: "Network Analysis",
+    description:
+      "Organisational Network Analysis (ONA) — visualise collaboration flows, identify influencers & connectors, map cross-team silos, and track M&A integration or remote-work patterns.",
+    url: "https://microsoft.github.io/viva-insights-sample-code/network/",
+    icon: DocumentBulletList24Regular,
+    category: "Code",
+    image: `${base}images/code-network-analysis.png`,
+  },
+];
+
+export const research: ResearchItem[] = [
   {
     id: "adoption-playbook",
     title: "Customer Adoption Playbook",
@@ -109,52 +164,6 @@ export const resources: ResourceItem[] = [
       "Microsoft Viva Insights adoption guide with best practices for rolling out analytics across your organization.",
     url: "https://adoption.microsoft.com/en-us/viva/insights/",
     icon: DocumentBulletList24Regular,
-    category: "Guidance",
-  },
-  {
-    id: "sample-code-r",
-    title: "Copilot Analytics Sample Code (R)",
-    description:
-      "R examples for querying and analyzing Copilot analytics data using the Viva Insights R library.",
-    url: "https://github.com/microsoft/viva-insights-sample-code/blob/main/examples/utility-r/copilot-analytics-examples.R",
-    icon: DocumentBulletList24Regular,
-    category: "Code",
-  },
-  {
-    id: "sample-code-python",
-    title: "Copilot Analytics Sample Code (Python)",
-    description:
-      "Python examples for querying and analyzing Copilot analytics data using the Viva Insights Python library.",
-    url: "https://github.com/microsoft/viva-insights-sample-code",
-    icon: DocumentBulletList24Regular,
-    category: "Code",
-  },
-  {
-    id: "sample-code-library",
-    title: "Viva Insights Sample Code Library",
-    description:
-      "Complete collection of sample code for the Viva Insights R and Python libraries.",
-    url: "https://github.com/microsoft/viva-insights-sample-code",
-    icon: DocumentBulletList24Regular,
-    category: "Code",
-  },
-  {
-    id: "analytics-starter-kit",
-    title: "Analytics Starter Kit",
-    description:
-      "Frontier analytics starter kit with ready-to-use queries, prompts, and visualization templates.",
-    url: "https://github.com/microsoft/viva-insights-sample-code/tree/main/frontier-analytics",
-    icon: DocumentBulletList24Regular,
-    category: "Code",
-  },
-  {
-    id: "prompt-libraries",
-    title: "Prompt Libraries",
-    description:
-      "Curated prompt collection for frontier analytics — ready-to-use prompts for Copilot and Viva Insights analysis.",
-    url: "https://github.com/microsoft/viva-insights-sample-code/tree/main/frontier-analytics/prompts",
-    icon: DocumentBulletList24Regular,
-    category: "Prompts",
   },
   {
     id: "agent-assisted-hours",
@@ -163,6 +172,29 @@ export const resources: ResourceItem[] = [
       "Learn how to calculate conversational agent impact using Copilot Studio agents within Viva Insights.",
     url: "https://learn.microsoft.com/en-us/viva/insights/advanced/analyst/templates/copilot-studio-agents#conversational-agent-impact",
     icon: DocumentBulletList24Regular,
-    category: "Guidance",
+  },
+  {
+    id: "work-trend-index-2026",
+    title: "Microsoft Work Trend Index Report 2026",
+    description:
+      "The latest annual Work Trend Index report — data-driven insights on how AI is reshaping work, productivity, and the future of organizations.",
+    url: "https://assets-c4akfrf5b4d3f4b7.z01.azurefd.net/assets/2026/05/2026_Work_Trend_Index_Annual_Report_050526-7_69fc5b1c4e265.pdf",
+    icon: DocumentBulletList24Regular,
+  },
+  {
+    id: "copilot-advanced-analytics",
+    title: "Advanced Analysis Examples with Copilot Analytics",
+    description:
+      "A recipe book of analysis and visualisation examples for measuring Copilot adoption and impact — built for analytics leaders and data scientists.",
+    url: "https://aka.ms/CopilotAdvancedAnalytics",
+    icon: DocumentBulletList24Regular,
+  },
+  {
+    id: "getting-started-custom-analysis",
+    title: "Getting Started with Custom Analysis in Copilot Analytics",
+    description:
+      "A tactical playbook for custom analysis — from planning your measurement programme and setting up Viva Insights to running queries and building an analysis playbook.",
+    url: "https://adoption.microsoft.com/files/copilot/GettingStartedWithCustomAnalysisInCopilotAnalytics.pptx",
+    icon: DocumentBulletList24Regular,
   },
 ];

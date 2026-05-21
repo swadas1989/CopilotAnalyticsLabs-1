@@ -1,673 +1,1247 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { makeStyles, mergeClasses, shorthands } from "@fluentui/react-components";
 import {
-  Button,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogSurface,
-  DialogTitle,
-  DialogTrigger,
-  makeStyles,
-  shorthands,
-  tokens,
-  Text,
-} from "@fluentui/react-components";
-import {
-  Beaker24Regular,
   ArrowRight16Regular,
-  Open16Regular,
-  Library24Regular,
+  Beaker24Regular,
   BookOpenGlobe24Regular,
+  ChevronDown16Regular,
   Code24Regular,
   DocumentBulletList24Regular,
-  Chat24Regular,
-  LearningApp24Regular,
-  Dismiss24Regular,
   Mail24Regular,
+  Sparkle24Regular,
 } from "@fluentui/react-icons";
-import { templates, resources } from "./data";
-
-/* ─── Viva-inspired palette ─── */
-const viva = {
-  purple: "#6264A7",
-  purpleDark: "#464775",
-  purpleDeep: "#33344A",
-  blue: "#0078D4",
-  teal: "#008272",
-  amber: "#CA5010",
-  heroGradient:
-    "linear-gradient(135deg, #1B1050 0%, #33344A 30%, #464775 60%, #6264A7 100%)",
-  sectionGradient:
-    "linear-gradient(135deg, #f0eef8 0%, #e8eaf6 50%, #e3f2fd 100%)",
-  cardShadow: "0 2px 8px rgba(0,0,0,0.08)",
-  cardShadowHover: "0 8px 24px rgba(0,0,0,0.14)",
-};
+import { research, resources, templates } from "./data";
 
 const VIVA_INSIGHTS_URL = "https://df.analysis.insights.cloud.microsoft/";
+const WHATS_COMING_URL = "https://www.microsoft.com/en-us/microsoft-viva";
+const TERMS_URL = "https://www.microsoft.com/en-us/legal/terms-of-use";
+const PRIVACY_URL = "https://privacy.microsoft.com/en-us/privacystatement";
+const TEMPLATES_COLLECTION_URL = "https://github.com/microsoft?q=copilot&type=all";
+const SAMPLE_CODE_URL = "https://microsoft.github.io/viva-insights-sample-code/";
+const PLAYBOOKS_URL = "https://adoption.microsoft.com/en-us/viva/insights/";
 
-const categoryColors: Record<string, { bg: string; fg: string }> = {
-  Guidance: { bg: "#e0f2f1", fg: "#008272" },
-  Code: { bg: "#e3f2fd", fg: "#0078D4" },
-  Prompts: { bg: "#f3e5f5", fg: "#8764B8" },
+const sectionTabs = [
+  { id: "templates", label: "Templates" },
+  { id: "sample-code", label: "Sample codes" },
+  { id: "research", label: "Research" },
+] as const;
+
+const heroValues = [
+  {
+    title: "Pick a template, ship a dashboard",
+    description:
+      "Templates with setup steps and data connectors. Go from browsing to dashboard quickly.",
+    Icon: Beaker24Regular,
+    accent: "linear-gradient(135deg, #FFE1B8 0%, #FFD5E6 100%)",
+    color: "#C85A1A",
+  },
+  {
+    title: "Real code, run on your data",
+    description:
+      "Executable sample code, prompt libraries, and toolkit. Run against your own data. Today.",
+    Icon: Code24Regular,
+    accent: "linear-gradient(135deg, #E1E8FF 0%, #F2E5FF 100%)",
+    color: "#5E4BD8",
+  },
+  {
+    title: "Research playbooks, proven in field",
+    description:
+      "Adoption playbooks and research from real enterprise rollouts, build on what works.",
+    Icon: BookOpenGlobe24Regular,
+    accent: "linear-gradient(135deg, #E8F7E5 0%, #DFF5FF 100%)",
+    color: "#2B7A56",
+  },
+];
+
+const templateOrder = [
+  "aio-dashboard",
+  "m365-copilot-personal",
+  "github-copilot-impact-org",
+  "github-copilot-impact-personal",
+  "ai-business-value",
+  "m365-app-usage",
+  "superuser-impact",
+];
+
+const templateMeta: Record<
+  string,
+  {
+    featured?: boolean;
+    badges?: { text: string; tone: "green" | "rose" }[];
+    stats?: { value: string; label: string }[];
+  }
+> = {
+  "aio-dashboard": {
+    featured: true,
+    badges: [{ text: "Featured in Labs", tone: "green" }],
+    stats: [
+      { value: "12", label: "KPI views" },
+      { value: "7", label: "Cohorts" },
+      { value: "<10 min", label: "Setup" },
+    ],
+  },
+  "m365-copilot-personal": {
+    badges: [{ text: "Most loved by users", tone: "rose" }],
+  },
 };
 
-const resourceIcons: Record<string, React.ComponentType> = {
-  Guidance: BookOpenGlobe24Regular,
-  Code: Code24Regular,
-  Prompts: Chat24Regular,
-  Docs: LearningApp24Regular,
+const resourceMeta: Record<
+  string,
+  {
+    featured?: boolean;
+    badges?: { text: string; tone: "green" | "blue" }[];
+    accent: string;
+    color: string;
+  }
+> = {
+  "viva-insights-essentials": {
+    featured: true,
+    badges: [
+      { text: "Featured in Labs", tone: "green" },
+      { text: "Starter kit", tone: "blue" },
+    ],
+    accent: "linear-gradient(135deg, #FFF2D8 0%, #EAE6FF 100%)",
+    color: "#7A4CE3",
+  },
+  "advanced-analytics": {
+    accent: "linear-gradient(135deg, #F2EAFF 0%, #FFF3DA 100%)",
+    color: "#7A4CE3",
+  },
+  "copilot-analytics": {
+    accent: "linear-gradient(135deg, #FFF1F7 0%, #EAF8FF 100%)",
+    color: "#E35BA3",
+  },
+  "frontier-analytics": {
+    accent: "linear-gradient(135deg, #EAF5FF 0%, #FFF0D6 100%)",
+    color: "#3F6CE9",
+  },
+  "network-analysis": {
+    accent: "linear-gradient(135deg, #FFF7DF 0%, #E8F5FF 100%)",
+    color: "#2976A8",
+  },
+};
+
+const researchOrder = [
+  "adoption-playbook",
+  "getting-started-custom-analysis",
+  "work-trend-index-2026",
+  "agent-assisted-hours",
+  "copilot-advanced-analytics",
+];
+
+const researchTags: Record<string, { text: string; tone: string }[]> = {
+  "adoption-playbook": [
+    { text: "Adoption", tone: "green" },
+    { text: "Org wide", tone: "purple" },
+  ],
+  "getting-started-custom-analysis": [
+    { text: "Methodology", tone: "rose" },
+    { text: "Org wide", tone: "purple" },
+  ],
+  "work-trend-index-2026": [
+    { text: "Research", tone: "teal" },
+    { text: "Industry wide", tone: "amber" },
+  ],
+  "agent-assisted-hours": [
+    { text: "Impact", tone: "blue" },
+    { text: "Agents", tone: "orange" },
+  ],
+  "copilot-advanced-analytics": [
+    { text: "Impact", tone: "blue" },
+    { text: "Advanced", tone: "slate" },
+  ],
 };
 
 const useStyles = makeStyles({
-  /* ─── Page shell ─── */
   page: {
     minHeight: "100vh",
-    backgroundColor: "#faf9f8",
+    backgroundColor: "#ffffff",
+    color: "#242424",
+    fontFamily: '"Segoe UI", "Segoe UI Web (West European)", system-ui, sans-serif',
   },
-
-  /* ─── Nav bar ─── */
   nav: {
-    display: "flex",
-    alignItems: "center",
-    ...shorthands.padding("12px", "40px"),
-    backgroundColor: "#fff",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    position: "sticky" as const,
+    position: "sticky",
     top: "0",
     zIndex: 100,
-  },
-  navBrand: {
-    display: "flex",
-    alignItems: "center",
-    ...shorthands.gap("10px"),
-    fontSize: "16px",
-    fontWeight: 600,
-    color: viva.purpleDark,
-  },
-  navLinks: {
-    display: "flex",
-    ...shorthands.gap("24px"),
-    marginLeft: "auto",
-    alignItems: "center",
-  },
-  navLink: {
-    fontSize: "14px",
-    fontWeight: 500,
-    color: tokens.colorNeutralForeground2,
-    cursor: "pointer",
-    transitionProperty: "color",
-    transitionDuration: "0.2s",
-    ":hover": {
-      color: viva.purple,
-    },
-  },
-  navDivider: {
-    width: "1px",
-    height: "20px",
-    backgroundColor: tokens.colorNeutralStroke2,
-  },
-
-  /* ─── Hero ─── */
-  hero: {
-    background: viva.heroGradient,
-    ...shorthands.padding("64px", "40px", "56px"),
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    maxWidth: "100%",
-    ...shorthands.gap("48px"),
-    "@media (max-width: 900px)": {
-      flexDirection: "column" as const,
-      textAlign: "center" as const,
-      ...shorthands.padding("48px", "24px", "40px"),
+    height: "48px",
+    backgroundColor: "#ffffff",
+    ...shorthands.padding("0", "56px"),
+    boxShadow: "0 1px 0 rgba(0, 0, 0, 0.08)",
+    '@media (max-width: 1200px)': {
+      ...shorthands.padding("0", "80px"),
+    },
+    '@media (max-width: 600px)': {
+      height: "auto",
+      flexDirection: "column",
+      alignItems: "stretch",
+      ...shorthands.padding("8px", "16px"),
+      gap: "8px",
     },
   },
-  heroText: {
-    maxWidth: "620px",
+  brand: {
     display: "flex",
-    flexDirection: "column" as const,
-    ...shorthands.gap("14px"),
+    alignItems: "center",
+    gap: "12px",
+    minHeight: "48px",
+    color: "#424242",
+    ...shorthands.padding("0", "8px", "1px"),
   },
-  heroBadge: {
+  separator: {
+    width: "1px",
+    height: "16px",
+    backgroundColor: "#C8C8C8",
+    flexShrink: 0,
+  },
+  brandTitle: {
+    fontSize: "14px",
+    lineHeight: "20px",
+    fontWeight: 600,
+    color: "#424242",
+    whiteSpace: "nowrap",
+  },
+  navLinks: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    minHeight: "48px",
+    ...shorthands.padding("0", "40px"),
+    '@media (max-width: 600px)': {
+      ...shorthands.padding("0"),
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+      gap: "12px",
+    },
+  },
+  navLink: {
     display: "inline-flex",
     alignItems: "center",
-    ...shorthands.gap("6px"),
-    backgroundColor: "rgba(255,255,255,0.12)",
-    ...shorthands.borderRadius("20px"),
-    ...shorthands.padding("6px", "14px"),
-    fontSize: "12px",
-    fontWeight: 600,
-    color: "rgba(255,255,255,0.85)",
-    width: "fit-content",
-    letterSpacing: "0.5px",
-    textTransform: "uppercase" as const,
-  },
-  heroTitle: {
-    fontSize: "40px",
-    fontWeight: 700,
-    lineHeight: "1.15",
-    color: "#fff",
-    letterSpacing: "-0.5px",
-  },
-  heroSubtitle: {
-    fontSize: "16px",
-    lineHeight: "1.65",
-    color: "rgba(255,255,255,0.85)",
-    maxWidth: "560px",
-  },
-  heroActions: {
-    display: "flex",
-    ...shorthands.gap("12px"),
-    marginTop: "4px",
-    "@media (max-width: 900px)": {
-      justifyContent: "center",
+    gap: "6px",
+    color: "#242424",
+    fontSize: "14px",
+    lineHeight: "20px",
+    textDecorationLine: "none",
+    whiteSpace: "nowrap",
+    ':hover': {
+      color: "#0E1726",
     },
   },
-  heroImageCard: {
-    flexShrink: 0,
-    width: "440px",
-    ...shorthands.borderRadius("12px"),
-    ...shorthands.overflow("hidden"),
-    boxShadow: "0 12px 40px rgba(0,0,0,0.35)",
-    backgroundColor: "#1a1a2e",
-    "@media (max-width: 900px)": {
-      width: "100%",
-      maxWidth: "440px",
+  navIconOnly: {
+    width: "28px",
+    height: "28px",
+    justifyContent: "center",
+    ...shorthands.borderRadius("999px"),
+    ':hover': {
+      backgroundColor: "#F5F5F5",
     },
   },
-  heroImage: {
+  hero: {
+    position: "relative",
+    minHeight: "520px",
+    overflow: "hidden",
+    backgroundColor: "#ffffff",
+    backgroundImage:
+      "linear-gradient(174deg, rgba(255,255,255,1) 2%, rgba(255,255,255,0.35) 81%, rgba(255,255,255,0) 100%), linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%), radial-gradient(circle at 82% 45%, rgba(118,79,245,0.28) 0%, rgba(118,79,245,0.12) 18%, rgba(118,79,245,0) 42%), radial-gradient(circle at 92% 66%, rgba(63,108,233,0.2) 0%, rgba(63,108,233,0) 33%), radial-gradient(circle at 100% 72%, rgba(32,187,198,0.18) 0%, rgba(32,187,198,0) 30%), linear-gradient(135deg, #F7F8FE 0%, #EEF4FF 46%, #F7F9FF 100%)",
+  },
+  heroRibbon: {
+    position: "absolute",
+    right: "-80px",
+    bottom: "-24px",
+    width: "640px",
+    height: "360px",
+    opacity: 0.78,
+    pointerEvents: "none",
+    background:
+      "radial-gradient(circle at 38% 58%, rgba(255,255,255,0) 24%, rgba(118,79,245,0.16) 25%, rgba(118,79,245,0.16) 26%, rgba(255,255,255,0) 27%), radial-gradient(circle at 48% 62%, rgba(255,255,255,0) 30%, rgba(63,108,233,0.16) 31%, rgba(63,108,233,0.16) 32%, rgba(255,255,255,0) 33%), radial-gradient(circle at 56% 68%, rgba(255,255,255,0) 36%, rgba(32,187,198,0.16) 37%, rgba(32,187,198,0.16) 38%, rgba(255,255,255,0) 39%), radial-gradient(circle at 72% 68%, rgba(255,255,255,0) 34%, rgba(255,170,204,0.16) 35%, rgba(255,170,204,0.16) 36%, rgba(255,255,255,0) 37%)",
+    transform: "rotate(-10deg)",
+    '@media (max-width: 1200px)': {
+      width: "480px",
+      right: "-120px",
+    },
+    '@media (max-width: 600px)': {
+      display: "none",
+    },
+  },
+  heroContent: {
+    position: "relative",
+    zIndex: 1,
     width: "100%",
-    display: "block",
-  },
-
-  /* ─── Sections ─── */
-  section: {
-    maxWidth: "1200px",
+    maxWidth: "928px",
     marginLeft: "auto",
     marginRight: "auto",
-    ...shorthands.padding("48px", "40px"),
-    "@media (max-width: 600px)": {
-      ...shorthands.padding("36px", "20px"),
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "32px",
+    ...shorthands.padding("64px", "0", "56px"),
+    '@media (max-width: 1200px)': {
+      maxWidth: "100%",
+      ...shorthands.padding("64px", "80px", "56px"),
+    },
+    '@media (max-width: 600px)': {
+      ...shorthands.padding("40px", "16px", "36px"),
+      gap: "24px",
     },
   },
-  sectionHeader: {
+  heroHeader: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "8px",
+    textAlign: "center",
+  },
+  heroTitle: {
+    margin: 0,
+    maxWidth: "760px",
+    fontSize: "40px",
+    lineHeight: "56px",
+    fontWeight: 600,
+    letterSpacing: "-0.02em",
+    color: "#0E1726",
+    '@media (max-width: 600px)': {
+      fontSize: "32px",
+      lineHeight: "40px",
+    },
+  },
+  heroSubtitle: {
+    margin: 0,
+    maxWidth: "760px",
+    fontSize: "16px",
+    lineHeight: "22px",
+    color: "#424242",
+  },
+  valuesShell: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    ...shorthands.borderRadius("24px"),
+    backgroundColor: "rgba(210, 225, 255, 0.5)",
+    ...shorthands.padding("10px"),
+    boxSizing: "border-box",
+  },
+  valuesPanel: {
+    width: "100%",
+    maxWidth: "896px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "24px",
+    backgroundColor: "rgba(255,255,255,0.72)",
+    backdropFilter: "blur(10px)",
+    ...shorthands.borderRadius("16px"),
+    ...shorthands.padding("24px"),
+    boxSizing: "border-box",
+  },
+  valuesGrid: {
+    width: "100%",
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: "24px",
+    '@media (max-width: 600px)': {
+      gridTemplateColumns: "1fr",
+      gap: "20px",
+    },
+  },
+  valueCard: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "8px",
+    textAlign: "center",
+  },
+  valueIcon: {
+    width: "64px",
+    height: "64px",
     display: "flex",
     alignItems: "center",
-    ...shorthands.gap("10px"),
-    marginBottom: "8px",
+    justifyContent: "center",
+    ...shorthands.borderRadius("20px"),
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.5)",
   },
-  sectionIcon: {
-    color: viva.purple,
-    fontSize: "24px",
+  valueTitle: {
+    margin: 0,
+    fontSize: "16px",
+    lineHeight: "24px",
+    fontWeight: 600,
+    color: "#000000",
   },
-  sectionTitle: {
-    fontSize: "26px",
-    fontWeight: 700,
-    color: viva.purpleDeep,
+  valueDescription: {
+    margin: 0,
+    fontSize: "12px",
+    lineHeight: "16px",
+    color: "#616161",
   },
-  sectionDesc: {
-    fontSize: "15px",
-    lineHeight: "1.7",
-    color: viva.purpleDark,
-    marginBottom: "24px",
-    maxWidth: "720px",
-    ...shorthands.padding("10px", "16px"),
-    backgroundColor: "rgba(98,100,167,0.05)",
-    borderLeft: `3px solid ${viva.purple}`,
-    ...shorthands.borderRadius("0", "8px", "8px", "0"),
+  primaryButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    minHeight: "32px",
+    backgroundColor: "#335CCC",
+    color: "#ffffff",
+    fontSize: "14px",
+    lineHeight: "20px",
+    fontWeight: 600,
+    textDecorationLine: "none",
+    ...shorthands.padding("6px", "12px"),
+    ...shorthands.borderRadius("4px"),
+    ':hover': {
+      backgroundColor: "#294DAE",
+    },
   },
-
-  /* ─── Template cards — horizontal layout ─── */
+  secondaryButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "32px",
+    backgroundColor: "#ffffff",
+    color: "#242424",
+    fontSize: "14px",
+    lineHeight: "20px",
+    fontWeight: 600,
+    textDecorationLine: "none",
+    ...shorthands.padding("5px", "12px"),
+    ...shorthands.borderRadius("4px"),
+    ...shorthands.border("1px", "solid", "#D1D1D1"),
+    ':hover': {
+      backgroundColor: "#F7F7F7",
+    },
+  },
+  tabsShell: {
+    position: "sticky",
+    top: "48px",
+    zIndex: 90,
+    backgroundColor: "#ffffff",
+    boxShadow: "0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14)",
+    '@media (max-width: 600px)': {
+      top: "96px",
+    },
+  },
+  tabsRail: {
+    height: "1px",
+    background: "linear-gradient(137deg, rgba(118,79,245,0.25) 13%, rgba(63,108,233,0.2) 43%, rgba(32,187,198,0.2) 100%)",
+  },
+  tabsList: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    ...shorthands.padding("4px", "256px", "0"),
+    backgroundColor: "#ffffff",
+    '@media (max-width: 1200px)': {
+      ...shorthands.padding("4px", "80px", "0"),
+    },
+    '@media (max-width: 600px)': {
+      ...shorthands.padding("4px", "16px", "0"),
+      gap: "8px",
+      overflowX: "auto",
+    },
+  },
+  tabButton: {
+    position: "relative",
+    height: "44px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    backgroundColor: "transparent",
+    color: "#424242",
+    fontSize: "14px",
+    lineHeight: "20px",
+    ...shorthands.padding("12px", "10px"),
+    ...shorthands.borderStyle("none"),
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
+  tabButtonActive: {
+    color: "#242424",
+    fontWeight: 600,
+    ':after': {
+      content: '""',
+      position: "absolute",
+      left: "0",
+      right: "0",
+      bottom: "0",
+      height: "3px",
+      ...shorthands.borderRadius("999px"),
+      background: "linear-gradient(137deg, #764FF5 13%, #3F6CE9 43%, #20BBC6 100%)",
+    },
+  },
+  section: {
+    ...shorthands.padding("64px", "256px"),
+    '@media (max-width: 1200px)': {
+      ...shorthands.padding("64px", "80px"),
+    },
+    '@media (max-width: 600px)': {
+      ...shorthands.padding("36px", "16px"),
+    },
+  },
+  sectionTemplateBg: {
+    background:
+      "linear-gradient(113deg, rgba(240,231,255,0.7) 0%, rgba(255,255,255,1) 40%, rgba(228,243,255,0.9) 100%)",
+  },
+  sectionCodeBg: {
+    background:
+      "linear-gradient(113deg, rgba(248,230,255,0.7) 0%, rgba(255,255,255,1) 48%, rgba(255,245,214,0.85) 100%)",
+  },
+  sectionResearchBg: {
+    background:
+      "linear-gradient(180deg, rgba(255,252,244,1) 0%, rgba(250,247,237,1) 100%)",
+  },
+  sectionContent: {
+    width: "100%",
+    maxWidth: "928px",
+    marginLeft: "auto",
+    marginRight: "auto",
+    display: "flex",
+    flexDirection: "column",
+    gap: "48px",
+  },
+  sectionTitleArea: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+  eyebrow: {
+    width: "fit-content",
+    margin: 0,
+    fontSize: "14px",
+    lineHeight: "20px",
+    fontWeight: 600,
+    letterSpacing: "0.02em",
+    textTransform: "uppercase",
+    backgroundImage: "linear-gradient(137deg, #764FF5 13%, #3F6CE9 43%, #20BBC6 100%)",
+    color: "transparent",
+    backgroundClip: "text",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  },
+  sectionHeadingRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "16px",
+    '@media (max-width: 600px)': {
+      flexDirection: "column",
+      alignItems: "flex-start",
+    },
+  },
+  sectionHeading: {
+    margin: 0,
+    fontSize: "32px",
+    lineHeight: "40px",
+    fontWeight: 600,
+    color: "#0E1726",
+    letterSpacing: "-0.02em",
+    '@media (max-width: 600px)': {
+      fontSize: "28px",
+      lineHeight: "34px",
+    },
+  },
+  sectionDescription: {
+    margin: 0,
+    fontSize: "16px",
+    lineHeight: "22px",
+    color: "#242424",
+    maxWidth: "760px",
+  },
   templateGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    ...shorthands.gap("16px"),
-    "@media (max-width: 800px)": {
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: "24px",
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    },
+    '@media (max-width: 600px)': {
       gridTemplateColumns: "1fr",
     },
   },
   templateCard: {
-    backgroundColor: "#fff",
-    ...shorthands.borderRadius("10px"),
-    ...shorthands.overflow("hidden"),
-    boxShadow: viva.cardShadow,
-    transitionProperty: "transform, box-shadow",
-    transitionDuration: "0.25s",
-    transitionTimingFunction: "ease",
-    cursor: "pointer",
+    minHeight: "300px",
     display: "flex",
-    flexDirection: "row" as const,
+    flexDirection: "column",
+    gap: "24px",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 0 2px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08)",
+    ...shorthands.borderRadius("16px"),
+    ...shorthands.padding("24px"),
+    boxSizing: "border-box",
+  },
+  templateCardFeatured: {
+    gridColumn: "span 2",
+    flexDirection: "row",
     alignItems: "stretch",
-    ":hover": {
-      transform: "translateY(-3px)",
-      boxShadow: viva.cardShadowHover,
+    '@media (max-width: 900px)': {
+      gridColumn: "span 2",
+    },
+    '@media (max-width: 600px)': {
+      gridColumn: "span 1",
+      flexDirection: "column",
+    },
+  },
+  templateCardContent: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+    flex: 1,
+    minWidth: 0,
+  },
+  templateCardImage: {
+    width: "100%",
+    height: "92px",
+    objectFit: "cover",
+    display: "block",
+    backgroundColor: "#F5F5F5",
+    ...shorthands.borderRadius("12px"),
+  },
+  templateCardImageFeatured: {
+    width: "42%",
+    height: "auto",
+    minHeight: "268px",
+    alignSelf: "stretch",
+    '@media (max-width: 600px)': {
+      width: "100%",
+      minHeight: "180px",
     },
   },
   templateBody: {
-    ...shorthands.padding("14px", "16px"),
     display: "flex",
-    flexDirection: "column" as const,
-    flexGrow: 1,
-    justifyContent: "center",
-    ...shorthands.gap("4px"),
-    minWidth: 0,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    gap: "16px",
+    flex: 1,
   },
-  templateImageWrapper: {
-    flexShrink: 0,
-    width: "150px",
-    ...shorthands.overflow("hidden"),
-    backgroundColor: "#f5f5f5",
-    display: "flex",
-    alignItems: "center",
-  },
-  templateImage: {
+  statsDivider: {
     width: "100%",
-    height: "100%",
-    objectFit: "cover" as const,
+    height: "0.5px",
+    backgroundColor: "#E0E0E0",
   },
-  templateIconFallback: {
-    flexShrink: 0,
-    width: "150px",
+  badgeRow: {
     display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+  },
+  badgeRowFeatured: {
+    gap: "16px",
+  },
+  badge: {
+    display: "inline-flex",
     alignItems: "center",
-    justifyContent: "center",
-    fontSize: "36px",
-    backgroundColor: "#ede7f6",
-    color: viva.purple,
+    gap: "6px",
+    fontSize: "14px",
+    lineHeight: "20px",
+    fontWeight: 400,
+    ...shorthands.padding("4px", "6px"),
+    ...shorthands.borderRadius("100px"),
+  },
+  badgeGreen: {
+    color: "#0E700E",
+    backgroundColor: "#F1FAF1",
+  },
+  badgeRose: {
+    color: "#B33A55",
+    backgroundColor: "#FDEBF1",
+  },
+  badgeBlue: {
+    color: "#0F6CBD",
+    backgroundColor: "#EBF3FC",
   },
   templateTitle: {
+    margin: 0,
+    fontSize: "16px",
+    lineHeight: "24px",
+    fontWeight: 600,
+    color: "#000000",
+  },
+  templateDescription: {
+    margin: 0,
     fontSize: "14px",
-    fontWeight: 600,
-    color: viva.purpleDeep,
-    lineHeight: "1.35",
+    lineHeight: "18px",
+    color: "#616161",
   },
-  templateDesc: {
-    fontSize: "12px",
-    lineHeight: "1.5",
-    color: tokens.colorNeutralForeground2,
-    flexGrow: 1,
-  },
-  templateCta: {
+  statsRow: {
     display: "flex",
-    alignItems: "center",
-    ...shorthands.gap("4px"),
-    fontSize: "12px",
+    gap: "24px",
+    flexWrap: "wrap",
+  },
+  statBlock: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "2px",
+  },
+  statValue: {
+    fontSize: "20px",
+    lineHeight: "24px",
     fontWeight: 600,
-    color: viva.purple,
-    marginTop: "4px",
+    color: "#0E1726",
   },
-
-  /* ─── Resources ─── */
-  resourcesBg: {
-    background: viva.sectionGradient,
+  statLabel: {
+    fontSize: "12px",
+    lineHeight: "16px",
+    color: "#616161",
   },
-  resourceGrid: {
+  codeGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    ...shorthands.gap("16px"),
-    "@media (max-width: 900px)": {
-      gridTemplateColumns: "repeat(2, 1fr)",
-    },
-    "@media (max-width: 600px)": {
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: "20px",
+    '@media (max-width: 600px)': {
       gridTemplateColumns: "1fr",
     },
   },
-  resourceCard: {
-    backgroundColor: "#fff",
-    ...shorthands.borderRadius("10px"),
-    ...shorthands.padding("18px"),
-    boxShadow: viva.cardShadow,
+  codeCard: {
     display: "flex",
-    flexDirection: "column" as const,
-    ...shorthands.gap("10px"),
-    transitionProperty: "transform, box-shadow",
-    transitionDuration: "0.25s",
-    cursor: "pointer",
-    ":hover": {
-      transform: "translateY(-3px)",
-      boxShadow: viva.cardShadowHover,
+    alignItems: "center",
+    gap: "16px",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 0 2px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08)",
+    ...shorthands.borderRadius("16px"),
+    ...shorthands.padding("24px"),
+    boxSizing: "border-box",
+    '@media (max-width: 600px)': {
+      flexDirection: "column",
+      alignItems: "flex-start",
     },
   },
-  resourceCardTop: {
-    display: "flex",
-    alignItems: "center",
-    ...shorthands.gap("12px"),
+  codeCardFeatured: {
+    gridRow: "span 2",
+    height: "auto",
+    minHeight: "unset",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    ...shorthands.padding("24px"),
+    gap: "16px",
+    '@media (max-width: 600px)': {
+      gridRow: "span 1",
+      height: "auto",
+    },
   },
-  resourceIconCircle: {
+  codeArt: {
     flexShrink: 0,
-    width: "36px",
-    height: "36px",
-    ...shorthands.borderRadius("8px"),
+    width: "128px",
+    height: "128px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "18px",
+    ...shorthands.borderRadius("14px"),
   },
-  resourceCategory: {
-    fontSize: "11px",
-    fontWeight: 600,
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.4px",
-    ...shorthands.borderRadius("4px"),
-    ...shorthands.padding("2px", "8px"),
+  codeArtFeatured: {
+    width: "128px",
+    height: "128px",
   },
-  resourceTitle: {
-    fontSize: "14px",
-    fontWeight: 600,
-    color: viva.purpleDeep,
-    lineHeight: "1.3",
-  },
-  resourceDesc: {
-    fontSize: "12px",
-    lineHeight: "1.5",
-    color: tokens.colorNeutralForeground2,
-  },
-
-  /* ─── Contact dialog ─── */
-  contactBody: {
+  codeCardBody: {
     display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    ...shorthands.gap("16px"),
-    ...shorthands.padding("24px", "0"),
-    textAlign: "center" as const,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    gap: "12px",
+    flex: 1,
+    alignSelf: "stretch",
   },
-  contactIconCircle: {
-    width: "56px",
-    height: "56px",
-    ...shorthands.borderRadius("50%"),
-    backgroundColor: "rgba(98,100,167,0.1)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: viva.purple,
-    fontSize: "28px",
+  codeCardBodyFeatured: {
+    gap: "16px",
   },
-  contactEmail: {
+  codeTitle: {
+    margin: 0,
     fontSize: "16px",
+    lineHeight: "24px",
     fontWeight: 600,
-    color: viva.purple,
+    color: "#000000",
   },
-
-  /* ─── Footer ─── */
+  codeDescription: {
+    margin: 0,
+    fontSize: "14px",
+    lineHeight: "18px",
+    color: "#616161",
+  },
+  researchGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: "24px",
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    },
+    '@media (max-width: 600px)': {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  researchCard: {
+    minHeight: "156px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 0 2px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)",
+    ...shorthands.borderRadius("16px"),
+    ...shorthands.padding("16px"),
+    textDecorationLine: "none",
+  },
+  researchTitle: {
+    margin: 0,
+    fontSize: "16px",
+    lineHeight: "24px",
+    fontWeight: 600,
+    color: "#000000",
+  },
+  researchDescription: {
+    margin: 0,
+    fontSize: "14px",
+    lineHeight: "18px",
+    color: "#424242",
+  },
+  tag: {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: "20px",
+    fontSize: "11px",
+    lineHeight: "14px",
+    fontWeight: 500,
+    ...shorthands.padding("3px", "8px"),
+    ...shorthands.borderRadius("999px"),
+  },
+  tagGreen: {
+    color: "#2D6C2E",
+    backgroundColor: "#EAF6E8",
+  },
+  tagPurple: {
+    color: "#7A49BB",
+    backgroundColor: "#F4EAFD",
+  },
+  tagRose: {
+    color: "#BE4A63",
+    backgroundColor: "#FDECEF",
+  },
+  tagTeal: {
+    color: "#2A7D86",
+    backgroundColor: "#E8F8FA",
+  },
+  tagAmber: {
+    color: "#A86A1E",
+    backgroundColor: "#FFF2DE",
+  },
+  tagBlue: {
+    color: "#2F69E8",
+    backgroundColor: "#EAF2FF",
+  },
+  tagOrange: {
+    color: "#D56A16",
+    backgroundColor: "#FFF0E2",
+  },
+  tagSlate: {
+    color: "#5E6A7B",
+    backgroundColor: "#EFF2F6",
+  },
   footer: {
-    textAlign: "center" as const,
-    ...shorthands.padding("28px", "40px"),
-    backgroundColor: viva.purpleDeep,
-    color: "rgba(255,255,255,0.6)",
-    fontSize: "13px",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 -1px 0 rgba(0,0,0,0.08)",
+    ...shorthands.padding("24px", "56px"),
+    '@media (max-width: 1200px)': {
+      ...shorthands.padding("24px", "80px"),
+    },
+    '@media (max-width: 600px)': {
+      ...shorthands.padding("24px", "16px"),
+    },
+  },
+  footerContent: {
+    maxWidth: "100%",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  footerBrand: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    color: "#424242",
+  },
+  footerDisclaimer: {
+    margin: 0,
+    fontSize: "12px",
+    lineHeight: "16px",
+    color: "#616161",
+    maxWidth: "1120px",
+  },
+  footerLinks: {
+    display: "flex",
+    gap: "16px",
+    flexWrap: "wrap",
+  },
+  footerLink: {
+    color: "#335CCC",
+    fontSize: "12px",
+    lineHeight: "16px",
+    textDecorationLine: "none",
+    ':hover': {
+      textDecorationLine: "underline",
+    },
   },
 });
 
+function MicrosoftLogoWordmark() {
+  return (
+    <svg width="78" height="16" viewBox="0 0 78 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Microsoft">
+      <rect x="0" y="0" width="7" height="7" fill="#F25022" />
+      <rect x="8.5" y="0" width="7" height="7" fill="#7FBA00" />
+      <rect x="0" y="8.5" width="7" height="7" fill="#00A4EF" />
+      <rect x="8.5" y="8.5" width="7" height="7" fill="#FFB900" />
+      <text x="21" y="11.5" fill="#5E5E5E" fontFamily="Segoe UI, Arial, sans-serif" fontSize="11">
+        Microsoft
+      </text>
+    </svg>
+  );
+}
+
 function App() {
   const styles = useStyles();
-  const [contactOpen, setContactOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<(typeof sectionTabs)[number]["id"]>("templates");
+
+  const orderedTemplates = useMemo(() => {
+    const map = new Map(templates.map((item) => [item.id, item]));
+    return templateOrder.map((id) => map.get(id)).filter(Boolean) as typeof templates;
+  }, []);
+
+  const orderedResearch = useMemo(() => {
+    const map = new Map(research.map((item) => [item.id, item]));
+    return researchOrder.map((id) => map.get(id)).filter(Boolean) as typeof research;
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (visible?.target.id) {
+          setActiveTab(visible.target.id as (typeof sectionTabs)[number]["id"]);
+        }
+      },
+      {
+        rootMargin: "-20% 0px -55% 0px",
+        threshold: [0.2, 0.35, 0.5],
+      },
+    );
+
+    sectionTabs.forEach(({ id }) => {
+      const element = document.getElementById(id);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToSection = (sectionId: (typeof sectionTabs)[number]["id"]) => {
+    setActiveTab(sectionId);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className={styles.page}>
-      {/* ─── Sticky nav ─── */}
       <nav className={styles.nav}>
-        <div className={styles.navBrand}>
-          {/* Microsoft logo */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 23 23">
-            <rect x="0" y="0" width="11" height="11" fill="#f25022" />
-            <rect x="12" y="0" width="11" height="11" fill="#7fba00" />
-            <rect x="0" y="12" width="11" height="11" fill="#00a4ef" />
-            <rect x="12" y="12" width="11" height="11" fill="#ffb900" />
-          </svg>
-          <Beaker24Regular />
-          Copilot Analytics Labs
+        <div className={styles.brand}>
+          <MicrosoftLogoWordmark />
+          <div className={styles.separator} />
+          <span className={styles.brandTitle}>Copilot Analytics Labs</span>
         </div>
+
         <div className={styles.navLinks}>
-          <a
-            className={styles.navLink}
-            href="#templates"
-            onClick={(e) => {
-              e.preventDefault();
-              document
-                .getElementById("templates")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
-          >
-            Explore Templates
+          <a className={styles.navLink} href={VIVA_INSIGHTS_URL} target="_blank" rel="noreferrer">
+            <Sparkle24Regular fontSize={16} />
+            <span>Viva Insights</span>
+          </a>
+          <a className={styles.navLink} href={WHATS_COMING_URL} target="_blank" rel="noreferrer">
+            <span>See what's coming to Viva</span>
           </a>
           <a
-            className={styles.navLink}
-            href="#resources"
-            onClick={(e) => {
-              e.preventDefault();
-              document
-                .getElementById("resources")
-                ?.scrollIntoView({ behavior: "smooth" });
-            }}
+            className={mergeClasses(styles.navLink, styles.navIconOnly)}
+            href="mailto:copilot@microsoft.com?subject=Copilot%20Analytics%20Labs%20feedback"
+            aria-label="Send feedback"
           >
-            Resources
-          </a>
-          <a
-            className={styles.navLink}
-            href={VIVA_INSIGHTS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Viva Insights
-          </a>
-          <div className={styles.navDivider} />
-          <a
-            className={styles.navLink}
-            href="#contact"
-            onClick={(e) => {
-              e.preventDefault();
-              setContactOpen(true);
-            }}
-          >
-            Contact Us
+            <Mail24Regular fontSize={16} />
           </a>
         </div>
       </nav>
 
-      {/* ─── Hero ─── */}
-      <section className={styles.hero}>
-        <div className={styles.heroText}>
-          <div className={styles.heroBadge}>
-            <Beaker24Regular style={{ fontSize: 14 }} />
-            Microsoft Copilot Analytics Lab
+      <header className={styles.hero}>
+        <div className={styles.heroRibbon} />
+        <div className={styles.heroContent}>
+          <div className={styles.heroHeader}>
+            <h1 className={styles.heroTitle}>Build what's next in analytics</h1>
+            <p className={styles.heroSubtitle}>
+              Guided templates, sample code, and playbooks to build Copilot and AI analytics that go beyond what's available in Viva today.
+            </p>
           </div>
-          <h1 className={styles.heroTitle}>
-            Copilot Analytics Labs
-          </h1>
-          <Text className={styles.heroSubtitle}>
-            Explore ready-made dashboards, reports, and code to quantify
-            Microsoft Copilot and Agent ROI. Test and validate advanced Copilot
-            analytics using real-world templates, prompts, and customer
-            insights—before scaling to production.
-          </Text>
-          <div className={styles.heroActions}>
-            <Button
-              appearance="primary"
-              icon={<Open16Regular />}
-              iconPosition="after"
-              style={{ backgroundColor: viva.purple, borderColor: viva.purple }}
-              onClick={() =>
-                document
-                  .getElementById("templates")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Explore Templates
-            </Button>
-            <Button
-              appearance="outline"
-              icon={<Library24Regular />}
-              style={{
-                color: "#fff",
-                borderColor: "rgba(255,255,255,0.4)",
-              }}
-              onClick={() =>
-                document
-                  .getElementById("resources")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Resources Library
-            </Button>
-          </div>
-        </div>
-        <div className={styles.heroImageCard}>
-          <img
-            className={styles.heroImage}
-            src="/images/aio-dashboard.png"
-            alt="All in One Dashboard preview"
-          />
-        </div>
-      </section>
 
-      {/* ─── Explore Templates ─── */}
-      <div id="templates" className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <Beaker24Regular className={styles.sectionIcon} />
-          <Text className={styles.sectionTitle}>Explore Templates</Text>
+          <div className={styles.valuesShell}>
+            <div className={styles.valuesPanel}>
+              <div className={styles.valuesGrid}>
+                {heroValues.map(({ title, description, Icon, accent, color }) => (
+                  <div key={title} className={styles.valueCard}>
+                    <div className={styles.valueIcon} style={{ background: accent, color }}>
+                      <Icon fontSize={28} />
+                    </div>
+                    <h2 className={styles.valueTitle}>{title}</h2>
+                    <p className={styles.valueDescription}>{description}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button className={styles.primaryButton} type="button" onClick={() => scrollToSection("templates")}>
+                Explore labs
+                <ChevronDown16Regular fontSize={14} />
+              </button>
+            </div>
+          </div>
         </div>
-        <Text className={styles.sectionDesc}>
-          Ready-made dashboards and reports to measure Copilot adoption,
-          productivity impact, and business value — deploy in minutes.
-        </Text>
-        <div className={styles.templateGrid}>
-          {templates.map((t) => {
-            const Icon = t.icon;
-            return (
-              <a
-                key={t.id}
-                className={styles.templateCard}
-                href={t.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className={styles.templateBody}>
-                  <Text className={styles.templateTitle}>{t.title}</Text>
-                  <Text className={styles.templateDesc}>{t.description}</Text>
-                  <div className={styles.templateCta}>
-                    <span>Open template</span>
-                    <ArrowRight16Regular />
-                  </div>
-                </div>
-                {t.image ? (
-                  <div className={styles.templateImageWrapper}>
-                    <img
-                      className={styles.templateImage}
-                      src={t.image}
-                      alt=""
-                    />
-                  </div>
-                ) : (
-                  <div className={styles.templateIconFallback}>
-                    <Icon />
-                  </div>
-                )}
-              </a>
-            );
-          })}
+      </header>
+
+      <div className={styles.tabsShell}>
+        <div className={styles.tabsList} role="tablist" aria-label="Sections">
+          {sectionTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              className={mergeClasses(styles.tabButton, activeTab === tab.id && styles.tabButtonActive)}
+              onClick={() => scrollToSection(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+        <div className={styles.tabsRail} />
       </div>
 
-      {/* ─── Resources Library ─── */}
-      <div id="resources" className={styles.resourcesBg}>
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <Library24Regular className={styles.sectionIcon} />
-            <Text className={styles.sectionTitle}>Resources Library</Text>
+      <section id="templates" className={mergeClasses(styles.section, styles.sectionTemplateBg)}>
+        <div className={styles.sectionContent}>
+          <div className={styles.sectionTitleArea}>
+            <p className={styles.eyebrow}>Template library</p>
+            <div className={styles.sectionHeadingRow}>
+              <h2 className={styles.sectionHeading}>Pick a template, start building</h2>
+              <a className={styles.secondaryButton} href={TEMPLATES_COLLECTION_URL} target="_blank" rel="noreferrer">
+                View all templates
+              </a>
+            </div>
+            <p className={styles.sectionDescription}>
+              Step-by-step templates to build dashboards across adoption, usage, impact, and business value, using data sources beyond Viva.
+            </p>
           </div>
-          <Text className={styles.sectionDesc}>
-            Guides, sample code, prompt libraries, and toolkits to deepen your
-            Copilot analytics practice.
-          </Text>
-          <div className={styles.resourceGrid}>
-            {resources.map((r) => {
-              const Icon =
-                resourceIcons[r.category] ?? DocumentBulletList24Regular;
-              const colors = categoryColors[r.category] ?? {
-                bg: "#ede7f6",
-                fg: "#6264A7",
-              };
+
+          <div className={styles.templateGrid}>
+            {orderedTemplates.map((item) => {
+              const meta = templateMeta[item.id] ?? {};
+              const isFeatured = Boolean(meta.featured);
+
               return (
-                <a
-                  key={r.id}
-                  className={styles.resourceCard}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <article
+                  key={item.id}
+                  className={mergeClasses(styles.templateCard, isFeatured && styles.templateCardFeatured)}
                 >
-                  <div className={styles.resourceCardTop}>
-                    <div
-                      className={styles.resourceIconCircle}
-                      style={{
-                        backgroundColor: colors.bg,
-                        color: colors.fg,
-                      }}
-                    >
-                      <Icon />
+                  {!isFeatured && item.image ? (
+                    <img className={styles.templateCardImage} src={item.image} alt="" />
+                  ) : null}
+
+                  <div className={styles.templateCardContent}>
+                    {meta.badges?.length ? (
+                      <div className={styles.badgeRow}>
+                        {meta.badges.map((badge) => (
+                          <span
+                            key={badge.text}
+                            className={mergeClasses(
+                              styles.badge,
+                              badge.tone === "green" ? styles.badgeGreen : styles.badgeRose,
+                            )}
+                          >
+                            {badge.text}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className={styles.templateBody}>
+                      <div className={styles.templateCardContent}>
+                        <h3 className={styles.templateTitle}>{item.title}</h3>
+                        <p className={styles.templateDescription}>{item.description}</p>
+                      </div>
+
+                      {meta.stats?.length ? (
+                        <>
+                          <div className={styles.statsDivider} />
+                          <div className={styles.statsRow}>
+                            {meta.stats.map((stat) => (
+                              <div key={stat.label} className={styles.statBlock}>
+                                <span className={styles.statValue}>{stat.value}</span>
+                                <span className={styles.statLabel}>{stat.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : null}
+
+                      <div>
+                        <a className={isFeatured ? styles.primaryButton : styles.secondaryButton} href={item.url} target="_blank" rel="noreferrer">
+                          View template
+                          {isFeatured && <ArrowRight16Regular fontSize={14} />}
+                        </a>
+                      </div>
                     </div>
-                    <span
-                      className={styles.resourceCategory}
-                      style={{
-                        backgroundColor: colors.bg,
-                        color: colors.fg,
-                      }}
-                    >
-                      {r.category}
-                    </span>
                   </div>
-                  <Text className={styles.resourceTitle}>{r.title}</Text>
-                  <Text className={styles.resourceDesc}>{r.description}</Text>
-                </a>
+
+                  {isFeatured && item.image ? (
+                    <img
+                      className={mergeClasses(styles.templateCardImage, styles.templateCardImageFeatured)}
+                      src={item.image}
+                      alt=""
+                    />
+                  ) : null}
+                </article>
               );
             })}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ─── Footer ─── */}
-      <footer className={styles.footer}>
-        Copilot Analytics Labs — Templates &amp; resources for Microsoft Copilot
-        analytics. Not officially supported. Use at your own discretion.
-      </footer>
+      <section id="sample-code" className={mergeClasses(styles.section, styles.sectionCodeBg)}>
+        <div className={styles.sectionContent}>
+          <div className={styles.sectionTitleArea}>
+            <p className={styles.eyebrow}>Sample code</p>
+            <div className={styles.sectionHeadingRow}>
+              <h2 className={styles.sectionHeading}>Grab the code, make it yours</h2>
+              <a className={styles.secondaryButton} href={SAMPLE_CODE_URL} target="_blank" rel="noreferrer">
+                View all codes
+              </a>
+            </div>
+            <p className={styles.sectionDescription}>
+              Runnable scripts, prompt libraries, and analytical methods in Python, R, and Power BI, adapt them to your org's data.
+            </p>
+          </div>
 
-      {/* ─── Contact Us Dialog ─── */}
-      <Dialog open={contactOpen} onOpenChange={(_e, data) => setContactOpen(data.open)}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle
-              action={
-                <DialogTrigger action="close">
-                  <Button
-                    appearance="subtle"
-                    aria-label="Close"
-                    icon={<Dismiss24Regular />}
-                  />
-                </DialogTrigger>
-              }
-            >
-              Contact Us
-            </DialogTitle>
-            <DialogContent>
-              <div className={styles.contactBody}>
-                <div className={styles.contactIconCircle}>
-                  <Mail24Regular />
+          <div className={styles.codeGrid}>
+            {resources.map((item) => {
+              const Icon = item.icon ?? DocumentBulletList24Regular;
+              const meta = resourceMeta[item.id];
+              const isFeatured = Boolean(meta?.featured);
+
+              return (
+                <article key={item.id} className={mergeClasses(styles.codeCard, isFeatured && styles.codeCardFeatured)}>
+                  <div
+                    className={mergeClasses(styles.codeArt, isFeatured && styles.codeArtFeatured)}
+                  >
+                    {item.image ? (
+                      <img src={item.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                    ) : (
+                      <Icon />
+                    )}
+                  </div>
+
+                  <div className={mergeClasses(styles.codeCardBody, isFeatured && styles.codeCardBodyFeatured)}>
+                    {meta?.badges?.length ? (
+                      <div className={mergeClasses(styles.badgeRow, isFeatured && styles.badgeRowFeatured)}>
+                        {meta.badges.map((badge) => (
+                          <span
+                            key={badge.text}
+                            className={mergeClasses(
+                              styles.badge,
+                              badge.tone === "green" ? styles.badgeGreen : styles.badgeBlue,
+                            )}
+                          >
+                            {badge.text}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className={styles.templateCardContent}>
+                      <h3 className={styles.codeTitle}>{item.title}</h3>
+                      <p className={styles.codeDescription}>{item.description}</p>
+                    </div>
+
+                    <div>
+                      <a className={isFeatured ? styles.primaryButton : styles.secondaryButton} href={item.url} target="_blank" rel="noreferrer">
+                        View code
+                        {isFeatured && <ArrowRight16Regular fontSize={14} />}
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section id="research" className={mergeClasses(styles.section, styles.sectionResearchBg)}>
+        <div className={styles.sectionContent}>
+          <div className={styles.sectionTitleArea}>
+            <p className={styles.eyebrow}>Research and playbooks</p>
+            <div className={styles.sectionHeadingRow}>
+              <h2 className={styles.sectionHeading}>Strategies already in play</h2>
+              <a className={styles.secondaryButton} href={PLAYBOOKS_URL} target="_blank" rel="noreferrer">
+                View all playbooks
+              </a>
+            </div>
+            <p className={styles.sectionDescription}>
+              Adoption playbooks, methodology guides, and research from real enterprise rollouts, so you don't start from scratch.
+            </p>
+          </div>
+
+          <div className={styles.researchGrid}>
+            {orderedResearch.map((item) => (
+              <a key={item.id} className={styles.researchCard} href={item.url} target="_blank" rel="noreferrer">
+                <div className={styles.badgeRow}>
+                  {(researchTags[item.id] ?? []).map((tag) => (
+                    <span
+                      key={tag.text}
+                      className={mergeClasses(
+                        styles.tag,
+                        tag.tone === "green" && styles.tagGreen,
+                        tag.tone === "purple" && styles.tagPurple,
+                        tag.tone === "rose" && styles.tagRose,
+                        tag.tone === "teal" && styles.tagTeal,
+                        tag.tone === "amber" && styles.tagAmber,
+                        tag.tone === "blue" && styles.tagBlue,
+                        tag.tone === "orange" && styles.tagOrange,
+                        tag.tone === "slate" && styles.tagSlate,
+                      )}
+                    >
+                      {tag.text}
+                    </span>
+                  ))}
                 </div>
-                <Text style={{ fontSize: "15px", lineHeight: "1.6" }}>
-                  For any queries, questions, or feedback about Copilot
-                  Analytics Labs, please reach out to our team:
-                </Text>
-                <a
-                  className={styles.contactEmail}
-                  href="mailto:copilot@microsoft.com"
-                >
-                  copilot@microsoft.com
-                </a>
-              </div>
-            </DialogContent>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
+                <div className={styles.templateCardContent}>
+                  <h3 className={styles.researchTitle}>{item.title}</h3>
+                  <p className={styles.researchDescription}>{item.description}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          <div className={styles.footerBrand}>
+            <MicrosoftLogoWordmark />
+            <div className={styles.separator} />
+            <span className={styles.brandTitle}>Copilot Analytics Labs</span>
+          </div>
+
+          <p className={styles.footerDisclaimer}>
+            Disclaimer: The materials on this page are provided as-is, without warranty of any kind, including merchantability or fitness for a particular purpose. Microsoft will not provide any support for these materials.
+          </p>
+
+          <div className={styles.footerLinks}>
+            <a className={styles.footerLink} href={TERMS_URL} target="_blank" rel="noreferrer">
+              Terms and Conditions
+            </a>
+            <a className={styles.footerLink} href={PRIVACY_URL} target="_blank" rel="noreferrer">
+              Privacy Statement
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
