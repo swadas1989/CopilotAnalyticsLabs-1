@@ -207,9 +207,10 @@ const useStyles = makeStyles({
     ...shorthands.padding("0", "40px"),
     '@media (max-width: 600px)': {
       ...shorthands.padding("0"),
-      justifyContent: "space-between",
-      flexWrap: "wrap",
+      justifyContent: "flex-start",
+      overflowX: "auto",
       gap: "12px",
+      minHeight: "36px",
     },
   },
   navLink: {
@@ -318,6 +319,10 @@ const useStyles = makeStyles({
     backgroundColor: "rgba(210, 225, 255, 0.5)",
     ...shorthands.padding("10px"),
     boxSizing: "border-box",
+    '@media (max-width: 600px)': {
+      ...shorthands.borderRadius("16px"),
+      ...shorthands.padding("8px"),
+    },
   },
   valuesPanel: {
     width: "100%",
@@ -332,6 +337,10 @@ const useStyles = makeStyles({
     ...shorthands.padding("24px"),
     boxSizing: "border-box",
     overflow: "hidden",
+    '@media (max-width: 600px)': {
+      ...shorthands.padding("16px"),
+      gap: "16px",
+    },
   },
   valuesGrid: {
     width: "100%",
@@ -857,6 +866,7 @@ const useStyles = makeStyles({
     alignItems: "center",
     gap: "12px",
     color: "#424242",
+    flexWrap: "wrap",
   },
   footerDisclaimer: {
     margin: 0,
@@ -1239,7 +1249,7 @@ function App() {
                   <h3 className={styles.researchTitle}>{item.title}</h3>
                   <p className={styles.researchDescription}>{item.description}</p>
                 </div>
-                <a href={item.url} target="_blank" rel="noreferrer" style={{ color: "#335CCC", fontSize: "14px", fontWeight: 600, textDecoration: "none", marginTop: "auto" }}>
+                <a className={styles.secondaryButton} href={item.url} target="_blank" rel="noreferrer" style={{ marginTop: "auto" }}>
                   View report
                 </a>
               </article>
