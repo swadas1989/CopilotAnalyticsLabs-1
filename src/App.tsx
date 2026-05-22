@@ -66,7 +66,6 @@ const templateMeta: Record<
   string,
   {
     featured?: boolean;
-    tall?: boolean;
     badges?: { text: string; tone: "green" | "rose" }[];
     stats?: { value: string; label: string }[];
   }
@@ -80,7 +79,7 @@ const templateMeta: Record<
       { value: "—", label: "Watching" },
     ],
   },
-  "m365-copilot-personal": { tall: true, badges: [{ text: "Most loved by users", tone: "rose" }] },
+  "m365-copilot-personal": {},
 };
 
 const resourceMeta: Record<
@@ -561,15 +560,12 @@ const useStyles = makeStyles({
   templateGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gridTemplateRows: "300px 300px 300px",
-    gap: "20px",
+    gap: "24px",
     '@media (max-width: 900px)': {
       gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-      gridTemplateRows: "auto",
     },
     '@media (max-width: 600px)': {
       gridTemplateColumns: "1fr",
-      gridTemplateRows: "auto",
     },
   },
   templateCard: {
@@ -594,10 +590,6 @@ const useStyles = makeStyles({
       gridColumn: "span 1",
       flexDirection: "column",
     },
-  },
-  templateCardTall: {
-    gridRow: "span 2",
-    minHeight: "620px",
   },
   templateCardContent: {
     display: "flex",
@@ -1067,12 +1059,11 @@ function App() {
             {orderedTemplates.map((item) => {
               const meta = templateMeta[item.id] ?? {};
               const isFeatured = Boolean(meta.featured);
-              const isTall = Boolean(meta.tall);
 
               return (
                 <article
                   key={item.id}
-                  className={mergeClasses(styles.templateCard, isFeatured && styles.templateCardFeatured, isTall && styles.templateCardTall)}
+                  className={mergeClasses(styles.templateCard, isFeatured && styles.templateCardFeatured)}
                 >
                   {!isFeatured && item.image ? (
                     <img className={styles.templateCardImage} src={item.image} alt="" />
