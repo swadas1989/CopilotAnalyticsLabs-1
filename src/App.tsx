@@ -13,7 +13,7 @@ import {
 } from "@fluentui/react-icons";
 import { research, resources, templates } from "./data";
 
-const VIVA_INSIGHTS_URL = "https://df.analysis.insights.cloud.microsoft/";
+const VIVA_INSIGHTS_URL = "https://analysis.insights.cloud.microsoft/";
 const WHATS_COMING_URL = "https://www.microsoft.com/en-us/microsoft-365/roadmap?filters=Microsoft%20Viva";
 const TERMS_URL = "https://www.microsoft.com/en-us/legal/terms-of-use";
 const PRIVACY_URL = "https://privacy.microsoft.com/en-us/privacystatement";
@@ -54,10 +54,10 @@ const heroValues = [
 
 const templateOrder = [
   "aio-dashboard",
-  "m365-copilot-personal",
+  "ai-business-value",
   "github-copilot-impact-org",
   "github-copilot-impact-personal",
-  "ai-business-value",
+  "m365-copilot-personal",
   "m365-app-usage",
   "superuser-impact",
 ];
@@ -244,7 +244,7 @@ const useStyles = makeStyles({
   },
   heroRibbon: {
     position: "absolute",
-    left: "-80px",
+    right: "-80px",
     bottom: "-24px",
     width: "640px",
     height: "360px",
@@ -252,10 +252,10 @@ const useStyles = makeStyles({
     pointerEvents: "none",
     background:
       "radial-gradient(circle at 38% 58%, rgba(255,255,255,0) 24%, rgba(118,79,245,0.16) 25%, rgba(118,79,245,0.16) 26%, rgba(255,255,255,0) 27%), radial-gradient(circle at 48% 62%, rgba(255,255,255,0) 30%, rgba(63,108,233,0.16) 31%, rgba(63,108,233,0.16) 32%, rgba(255,255,255,0) 33%), radial-gradient(circle at 56% 68%, rgba(255,255,255,0) 36%, rgba(32,187,198,0.16) 37%, rgba(32,187,198,0.16) 38%, rgba(255,255,255,0) 39%), radial-gradient(circle at 72% 68%, rgba(255,255,255,0) 34%, rgba(255,170,204,0.16) 35%, rgba(255,170,204,0.16) 36%, rgba(255,255,255,0) 37%)",
-    transform: "rotate(10deg)",
+    transform: "rotate(-10deg)",
     '@media (max-width: 1200px)': {
       width: "480px",
-      left: "-120px",
+      right: "-120px",
     },
     '@media (max-width: 600px)': {
       display: "none",
