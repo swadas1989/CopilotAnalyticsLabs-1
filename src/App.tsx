@@ -1042,8 +1042,8 @@ function App() {
             </h3>
             <p style={{ margin: "0 0 20px", fontSize: "14px", lineHeight: "20px", color: "#616161" }}>
               For further questions and doubts — Please drop a mail to{" "}
-              <a href="mailto:copilotanalyticslabs@microsoft.com" style={{ color: "#0078D4", textDecoration: "none" }}>
-                copilotanalyticslabs@microsoft.com
+              <a href="mailto:CopilotAnalyticsLabs@microsoft.com" style={{ color: "#0078D4", textDecoration: "none" }}>
+                CopilotAnalyticsLabs@microsoft.com
               </a>
             </p>
             <button
