@@ -8,13 +8,13 @@ import {
   DocumentBulletList24Regular,
   Eye16Regular,
   PersonBoard24Regular,
-  PersonFeedback20Regular,
   Star16Filled,
 } from "@fluentui/react-icons";
 import { research, resources, templates } from "./data";
 
 const VIVA_INSIGHTS_URL = "https://analysis.insights.cloud.microsoft/";
 const WHATS_COMING_URL = "https://www.microsoft.com/en-us/microsoft-365/roadmap?filters=Microsoft%20Viva";
+const FEEDBACK_URL = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR0To00bktq1Ilw6hJ9BCmj5UNTg1QzM4UUs1SzNFM08yUFhVTlJDSDlWUC4u";
 const TERMS_URL = "https://www.microsoft.com/en-us/legal/terms-of-use";
 const PRIVACY_URL = "https://privacy.microsoft.com/en-us/privacystatement";
 
@@ -988,12 +988,8 @@ function App() {
           <a className={styles.navLink} href={WHATS_COMING_URL} target="_blank" rel="noreferrer">
             <span>Viva Roadmap</span>
           </a>
-          <a
-            className={mergeClasses(styles.navLink, styles.navIconOnly)}
-            href="mailto:copilot@microsoft.com?subject=Copilot%20Analytics%20Labs%20feedback"
-            aria-label="Send feedback"
-          >
-            <PersonFeedback20Regular fontSize={16} />
+          <a className={styles.navLink} href={FEEDBACK_URL} target="_blank" rel="noreferrer">
+            <span>Feedback</span>
           </a>
         </div>
       </nav>

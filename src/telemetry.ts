@@ -73,6 +73,12 @@ export function logPageView(): void {
     timestamp: now,
   });
   writeStore(store);
+
+  // Send page view event to Microsoft Clarity
+  if (typeof window !== "undefined" && (window as any).clarity) {
+    (window as any).clarity("event", TelemetryEvents.PageView);
+  }
+
   console.log(
     `%c[Telemetry] PageView #${store.pageViews}`,
     "color:#6264A7;font-weight:bold"
@@ -88,6 +94,15 @@ export function logClick(
   const store = readStore();
   store.events.push({ name: eventName, properties, timestamp: now });
   writeStore(store);
+
+  // Send custom event to Microsoft Clarity for server-side tracking
+  if (typeof window !== "undefined" && (window as any).clarity) {
+    (window as any).clarity("event", eventName);
+    if (properties) {
+      (window as any).clarity("set", eventName, JSON.stringify(properties));
+    }
+  }
+
   console.log(
     `%c[Telemetry] ${eventName}`,
     "color:#6264A7;font-weight:bold",
