@@ -946,15 +946,18 @@ function App() {
       (entries) => {
         const visible = entries
           .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          .sort((a, b) => {
+            // Prefer the element closer to the top of the viewport
+            return a.boundingClientRect.top - b.boundingClientRect.top;
+          })[0];
 
         if (visible?.target.id) {
           setActiveTab(visible.target.id as (typeof sectionTabs)[number]["id"]);
         }
       },
       {
-        rootMargin: "-20% 0px -55% 0px",
-        threshold: [0.2, 0.35, 0.5],
+        rootMargin: "-10% 0px -60% 0px",
+        threshold: [0.05, 0.2, 0.35, 0.5],
       },
     );
 
